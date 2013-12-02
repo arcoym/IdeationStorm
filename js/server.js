@@ -19,30 +19,42 @@ function handler (req, res) {
 }
 
 
+var clients = new Array();
 var users = new Array();
-
 
 io.sockets.on('connection', function (socket) {
 
 		console.log("We have a new client: " + socket.id);
 
-		users[users.length] = socket.id;
+		clients[clients.length] = socket.id;
+		console.log("We have "+ clients.length + " clients.");
 
-		console.log("We have "+ users.length + " clients.");
 
+		socket.on('join', function(data){
+			console.log("Client has joined with user name: "+ data);
+			users.push({id: socket.id, name: data});  
+				
+			
 
+			io.sockets.emit('getUsers', users);
+
+		});
 
 		socket.on('disconnect', function() {
 			console.log("Client has disconnected " + socket.id);
 
 
-			for(var i = 0; i < users.length; i++){
-				if (socket.id == users[i]){
+			for(var i = 0; i < clients.length; i++){
+				if (socket.id == clients[i]){
 					users.splice(i,1);
+					clients.splice(i,1);
 				}
+
 			}
 
-			console.log("Client has disconnected, we now have "+ users.length + " clients.");
+
+
+			console.log("Client has disconnected, we now have "+ clients.length + " clients.");
 
 		});
 
