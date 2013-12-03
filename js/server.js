@@ -21,35 +21,43 @@ function handler (req, res) {
 
 var clients = new Array();
 var users = new Array();
+var ideasStart = new Array();
 
 io.sockets.on('connection', function (socket) {
 
 		console.log("We have a new client: " + socket.id);
-
 		clients[clients.length] = socket.id;
 		console.log("We have "+ clients.length + " clients.");
+
+
+		socket.emit('getUsers', users);			
+		
+		socket.on('ideas', function(data){
+			for(var i = 0; i < data.length; i++){
+				ideasStart.push(data[i]);
+			}
+
+			io.sockets.emit('getIdeas', ideasStart);
+
+
+		});
 
 
 		socket.on('join', function(data){
 			console.log("Client has joined with user name: "+ data);
 			users.push({id: socket.id, name: data});  
-				
-			
-
 			io.sockets.emit('getUsers', users);
 
 		});
 
+
 		socket.on('disconnect', function() {
 			console.log("Client has disconnected " + socket.id);
-
-
 			for(var i = 0; i < clients.length; i++){
 				if (socket.id == clients[i]){
 					users.splice(i,1);
 					clients.splice(i,1);
 				}
-
 			}
 
 
