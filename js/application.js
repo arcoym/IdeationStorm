@@ -26,6 +26,18 @@ socket.on('getUsers', function(data){
 	}
 
     if(!joined){
+
+		if(data.length == participants){
+			var joinForm = document.getElementById('join');
+			joinForm.parentNode.removeChild(joinForm);
+
+			var p = document.createElement('p');
+			p.innerHTML = "Session is full."
+			p.setAttribute('id', "session-full");
+			document.getElementById('container').appendChild(p);
+		}
+
+
 		//if there is no user, let them know.    	
 		if(data[0] == null){
 			 	var userli = document.createElement("li");
@@ -58,15 +70,46 @@ socket.on('getIdeas', function(data){
 		}
 	}
 
-	if(joined) displayIdeas();
+	if(joined){
+		displayIdeas();		
+	} 
+
+});
+
+
+socket.on('startVoting', function(data){
+	allIdeas = new Array();
+	for(var i=0; i<data.length; i++){
+		if(data[i] != null){
+			allIdeas.push(data[i]);
+		}
+	}
+
+	displayIdeasToVote();
+
+	var p = document.createElement('p');
+	p.innerHTML = "Start voting."
+	p.setAttribute('id', "start-voting");
+	document.getElementById('container').appendChild(p);
+
+
+	var b = document.createElement("input"); //input element, Submit button
+	b.setAttribute('type',"button");
+	b.setAttribute('id',"vote");
+	b.setAttribute('class',"btn");
+	b.setAttribute('onclick',"voteIdeas();");
+	b.setAttribute('value',"Vote");
+	p.appendChild(b);	
+
 });
 
 
 var allUsers = new Array();
 var myIdeas = new Array();
+var myVotes = new Array();
 var allIdeas = new Array();
 var joined = false;
-
+var participants = 3;
 
 var init = function() {
 	console.log("init");
@@ -74,6 +117,7 @@ var init = function() {
 
 
 };
+
 
 
 var joinStorm = function(){
@@ -98,8 +142,8 @@ var startSession = function(){
 	//remove previous UI
 	var joinForm = document.getElementById('join');
 	joinForm.parentNode.removeChild(joinForm);
-	var userList = document.getElementById('user-list');
-	userList.parentNode.removeChild(userList);
+	// var userList = document.getElementById('user-list');
+	// userList.parentNode.removeChild(userList);
 
 	//add ice breaker form
 	var f = document.createElement("form");
@@ -116,7 +160,7 @@ var startSession = function(){
 	}
 
 
-	var s = document.createElement("input"); //input element, Submit button
+	var s = document.createElement("input"); 
 	s.setAttribute('type',"button");
 	s.setAttribute('id',"icebreakerbtn");
 	s.setAttribute('class',"btn");
@@ -125,7 +169,7 @@ var startSession = function(){
 	f.appendChild(s);	
 
 	document.getElementById('container').appendChild(f);
-	//document.getElementsByClassName('idea_field')[1].style.float = "left"
+
 };
 
 
@@ -138,7 +182,7 @@ var startIdeas = function(){
 		}
 	}
 	//send my ideas to the server
-	socket.emit('ideas',myIdeas);
+	socket.emit('myIdeas',myIdeas);
 
 	//change status
 	document.getElementById('status').innerHTML = "Display all ideas";
@@ -151,6 +195,11 @@ var startIdeas = function(){
 	ul.setAttribute('id', "ideas-list");
 	document.getElementById('container').appendChild(ul);
 
+	var p = document.createElement('p');
+	p.innerHTML = "Waiting all users to add ideas."
+	p.setAttribute('id', "waiting1");
+	document.getElementById('container').appendChild(p);
+
 	//display ideas
 	displayIdeas();
 
@@ -158,11 +207,9 @@ var startIdeas = function(){
 
 
 var displayIdeas = function(){
-
 	var lastIdeaList = document.getElementsByClassName("ideas");
 	var length = lastIdeaList.length;
 	if(length>0){
-		console.log(lastIdeaList);
 		for(var i=0; i<length; i++){
 			var id = "idea-"+i;
 			var element= document.getElementById(id);
@@ -171,7 +218,6 @@ var displayIdeas = function(){
 	}
 
 	for(var i=0; i<allIdeas.length; i++){
-			console.log(allIdeas);
 		 	var ideali = document.createElement("li");
 		 	ideali.id = "idea-"+i;
 		 	ideali.className= "ideas";
@@ -179,5 +225,57 @@ var displayIdeas = function(){
 		 	document.getElementById("ideas-list").appendChild(ideali);			
 	}
 }
+
+
+var displayIdeasToVote = function(){
+
+	//remove waiting message
+	var wait = document.getElementById('waiting1');
+	wait.parentNode.removeChild(wait);	
+
+
+	//remove last list
+	var lastIdeaList = document.getElementsByClassName("ideas");
+	var length = lastIdeaList.length;
+	if(length>0){
+		for(var i=0; i<length; i++){
+			var id = "idea-"+i;
+			var element= document.getElementById(id);
+			element.parentNode.removeChild(element);
+		}
+	}
+
+	//add list with checkboxes
+	for(var i=0; i<allIdeas.length; i++){
+	 	var ideali = document.createElement("li");
+	 	ideali.id = "idea-"+i;
+	 	ideali.className= "ideas";
+	 	ideali.innerHTML = allIdeas[i];
+	 	document.getElementById("ideas-list").appendChild(ideali);
+	 	var f = document.createElement("form");
+	 	f.setAttribute('id', "voteIdea"+i);
+	 	for(var j = 0; j < 5; j++){
+	 		var inp = document.createElement("input");
+	 		inp.setAttribute('type', "checkbox");
+	 		inp.setAttribute('id', "idea"+i+"vote"+j);	
+	 		f.appendChild(inp);
+	 	}
+		ideali.appendChild(f);
+	}
+}
+
+
+var voteIdeas = function(){
+	//gather allVotes and send to server
+
+
+	socket.emit('myVotes',myVotes);
+
+}
+
+
+
+
+
 
 window.addEventListener('load', init, false);
