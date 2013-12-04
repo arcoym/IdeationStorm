@@ -21,10 +21,18 @@ function handler (req, res) {
 
 var clients = new Array();
 var users = new Array();
-var ideasStart = new Array();
+var initialIdeas = new Array();
 var submittedIdeas = 0;
 var submittedVotes = 0;
 var participants = 3;
+
+
+function compare(a,b) {
+	  if (a.points < b.points) return 1;
+	  if (a.points > b.points) return -1;
+	  return 0;
+}
+
 
 io.sockets.on('connection', function (socket) {
 
@@ -36,31 +44,45 @@ io.sockets.on('connection', function (socket) {
 		
 		socket.on('myIdeas', function(data){
 			for(var i = 0; i < data.length; i++){
-				ideasStart.push(data[i]);
+				initialIdeas.push({idea: data[i], points: 0});
 			}
 				
 			submittedIdeas++;
-			if(submittedIdeas > participants-1){
-				io.sockets.emit('startVoting', ideasStart);
+			if(submittedIdeas >= participants){
+				io.sockets.emit('startVoting', initialIdeas);
 			}	
 			else{
-				io.sockets.emit('getIdeas', ideasStart);
+				io.sockets.emit('getIdeas', initialIdeas);
 			}		
 			console.log(submittedIdeas);
 		});
 
 
 		socket.on('myVotes', function(data){
-			//receive votes and calculates top words.
+			//receive votes 
+			var myVotes = new Array();
+
+			for(var i = 0; i < data.length; i++){
+				myVotes.push(data[i].points);
+			}
+
+			for(var j = 0; j < myVotes.length; j++){
+				initialIdeas[j].points += myVotes[j];
+			}
 
 
 			submittedVotes++;
 			if(submittedVotes > participants-1){
-				//io.sockets.emit('results', winner);
+				// calculates top words.
+				initialIdeas.sort(compare);
+				console.log(initialIdeas);
+
+				//io.sockets.emit('voteResults', data);
 			}
 			else{
-				//io.sockets.emit('waitVotes');				
+				//socket.emit('waitVotes');				
 			}
+
 
 
 		});

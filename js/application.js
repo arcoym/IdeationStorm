@@ -66,7 +66,7 @@ socket.on('getIdeas', function(data){
 	allIdeas = new Array();
 	for(var i=0; i<data.length; i++){
 		if(data[i] != null){
-			allIdeas.push(data[i]);
+			allIdeas.push(data[i].idea);
 		}
 	}
 
@@ -81,14 +81,16 @@ socket.on('startVoting', function(data){
 	allIdeas = new Array();
 	for(var i=0; i<data.length; i++){
 		if(data[i] != null){
-			allIdeas.push(data[i]);
+			allIdeas.push(data[i].idea);
 		}
 	}
 
 	displayIdeasToVote();
 
+ 
+
 	var p = document.createElement('p');
-	p.innerHTML = "Start voting."
+	p.innerHTML = "Vote in your ideas!"
 	p.setAttribute('id', "start-voting");
 	document.getElementById('container').appendChild(p);
 
@@ -104,18 +106,25 @@ socket.on('startVoting', function(data){
 });
 
 
+socket.on('waitVotes', function(){
+	//hide button
+	//wait all users to vote
+
+});
+
+
+socket.on('voteResults', function(){
+	//displayResults
+
+});
+
 var allUsers = new Array();
-var myIdeas = new Array();
-var myVotes = new Array();
 var allIdeas = new Array();
 var joined = false;
 var participants = 3;
 
 var init = function() {
 	console.log("init");
-
-
-
 };
 
 
@@ -174,6 +183,7 @@ var startSession = function(){
 
 
 var startIdeas = function(){
+	var myIdeas = new Array();
 
 	for(var i = 1; i < 6; i++){
 		var single_idea = document.getElementById('idea'+i).value;
@@ -266,13 +276,21 @@ var displayIdeasToVote = function(){
 
 
 var voteIdeas = function(){
-	//gather allVotes and send to server
+	//gather myVotes and send to server
+ 	var myVotes = new Array();
 
-
+	for(var i=0; i<allIdeas.length; i++){	
+	var points = 0
+	 for(var j = 0; j < 5; j++){
+	 	var inputElement = document.getElementById("idea"+i+"vote"+j);
+	 	if(inputElement.checked){
+	 		points++;
+	 	}	 	
+	 }
+	 myVotes.push({idea: allIdeas[i], points: points});
+	}
 	socket.emit('myVotes',myVotes);
-
 }
-
 
 
 
