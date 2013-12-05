@@ -167,16 +167,25 @@ socket.on('threadRunning', function(data){
 		wait.parentNode.removeChild(wait);	
 	}
 
+	//remove previous UI
+	var lastStatus = document.getElementById('status-turn');
+	if(lastStatus != null){
+	lastStatus.parentNode.removeChild(lastStatus);
+	}
+
+
     console.log(data);
     console.log(myId);
-	//letting my know if it is my turn or if I'm next
+
+	//letting me know if it is my turn or if I'm next
 	for(var i=0; i<data.length; i++){
 		if(data[i].id == myId){
 			if(data[i].index == 0) myTurn = true;
 			else if(data[i].index == 1) imNext = true;
 			else{
 				myTurn = false;
-				myTurn = false;
+				imNext = false;
+				console.log("it is not my turn");
 			}
 		}
 	}
@@ -184,12 +193,6 @@ socket.on('threadRunning', function(data){
 	//update status
 	document.getElementById('status').innerHTML = "Thread running";
 
-
-	//remove previous UI
-	var lastStatus = document.getElementById('status-turn');
-	if(lastStatus != null){
-	lastStatus.parentNode.removeChild(lastStatus);
-	}
 
 	if(myTurn){
 		itsMyTurn();
@@ -204,16 +207,47 @@ socket.on('threadRunning', function(data){
 });
 
 
+socket.on('receiveLiveCoding', function(data){
+	var text =document.getElementById("live-coding");
+	if(imNext){
+		text.innerHTML = data;
+	}
+
+});
+
+
+socket.on('sendLiveCoding', function(){
+
+	if(myTurn){
+	console.log("I still think it is my turn");
+	var keepSending = window.setInterval(sendThreadText, 1000);
+	}
+	else{
+	clearInterval(keepSending);	
+	}
+});
+
+
+
+var sendThreadText = function(){
+	//console.log("it is my turn and I will send my text");
+	var threadText = document.getElementById('threadText').value;
+	socket.emit('liveCodingText', threadText);
+
+}
+
 socket.on('lastThread', function(data){
 	console.log(data);
 
 });
 
 
+
+
 var myId;
 var myTurn = false;
 var imNext = false;
-var currentThread;
+var currentThread = "";
 var allUsers = new Array();
 var allIdeas = new Array();
 var joined = false;
@@ -458,6 +492,11 @@ var myTurnIsNext = function(){
 	p.innerHTML = "You're next! <br/> Soon, you'll receive the first ideas about: <br/>" +currentThread;
 	p.setAttribute('id', "status-turn");
 	div.appendChild(p);
+
+	var n = document.createElement('p');
+	n.innerHTML = "text enters here";
+	n.setAttribute('id', "live-coding");
+	div.appendChild(n);
 
 }
 

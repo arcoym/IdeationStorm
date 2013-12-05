@@ -39,6 +39,9 @@ var submittedIdeas = 0;
 var submittedVotes = 0;
 var submittedReady = 0;
 
+var socketTurn;
+var socketNext;
+
 var participants = 3;
 
 
@@ -56,6 +59,8 @@ function random(a,b){
 
 
 io.sockets.on('connection', function (socket) {
+		
+		var allSockets = io.sockets.clients();
 
 		//console.log("We have a new client: " + socket.id);
 		clients[clients.length] = socket.id;
@@ -130,16 +135,47 @@ io.sockets.on('connection', function (socket) {
 
 				for(var j = 0; j < users.length; j++){
 					users[j].index = j;
+
+					//assign turn socket
+					if(users[j].index == 0){
+						console.log("socketTurn defined:" +socketTurn);
+						for(var i = 0; i < allSockets.length; i++){
+							if(users[j].id == allSockets[i].id){
+								socketTurn = allSockets[i];
+								console.log("socketTurn defined:" +socketTurn);
+
+							}
+						}						
+					}
+					//assign next socket
+					else if(users[j].index == 1){
+						console.log("socketNext defined:"+ socketNext);
+						for(var i = 0; i < allSockets.length; i++){
+							if(users[j].id == allSockets[i].id){
+								socketNext = allSockets[i];
+								console.log("socketNext defined:"+ socketNext);
+							}
+						}	
+					}
+
 				}
+
 				io.sockets.emit('threadRunning', users);
+				socketTurn.emit('sendLiveCoding');
 			}
+		});
+
+		socket.on('liveCodingText', function(data){
+			socketNext.emit('receiveLiveCoding', data);
+
 		});
 
 		socket.on('nextTurn', function(data){
 			currentThreadText = currentThreadText + data;
-			console.log(currentThreadText);
+			//console.log(currentThreadText);
 
-			var allSockets = io.sockets.clients();
+			//send the next user the text
+			socketNext.emit("lastThread", currentThreadText);						
 
 
 			for(var j = 0; j < users.length; j++){
@@ -147,21 +183,32 @@ io.sockets.on('connection', function (socket) {
 				
 				if(users[j].index < 0){
 				 	users[j].index = users.length-1;
-
+				}
+				else if(users[j].index == 0){
 					for(var i = 0; i < allSockets.length; i++){
 						if(users[j].id == allSockets[i].id){
-							allSockets[i].emit("lastThread", currentThreadText);
-							console.log("thread sent");
+							socketTurn = allSockets[i];
 						}
-					}
+					}						
 				}
+				//assign next socket
+				else if(users[j].index == 1){
+					for(var i = 0; i < allSockets.length; i++){
+						if(users[j].id == allSockets[i].id){
+							socketNext = allSockets[i];
+						}
+					}	
+				}
+
 			}
 
 			console.log(users);
 			io.sockets.emit('threadRunning', users);
-
+			socketTurn.emit('sendLiveCoding');
 
 		});
+
+
 
 		socket.on('disconnect', function() {
 			console.log("Client has disconnected " + socket.id);
