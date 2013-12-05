@@ -2,9 +2,11 @@ var socket = io.connect('http://localhost:8080/');
 
 socket.on('connect', function() {
 	console.log('connected');
-
 });
 
+socket.on('myId', function(data){
+	myId = data;
+});
 
 socket.on('getUsers', function(data){
 	allUsers = data;
@@ -106,18 +108,112 @@ socket.on('startVoting', function(data){
 });
 
 
-socket.on('waitVotes', function(){
-	//hide button
-	//wait all users to vote
-
-});
 
 
-socket.on('voteResults', function(){
+socket.on('voteResults', function(data){
+	//remove previous UI
+	var wait = document.getElementById('waiting2');
+	wait.parentNode.removeChild(wait);
+
+	var oldIdeas = document.getElementById('ideas-list');
+	oldIdeas.parentNode.removeChild(oldIdeas);
+
+	var ul = document.createElement("ul");
+	ul.setAttribute('id', "top-list");
+	document.getElementById('container').appendChild(ul);		
+
 	//displayResults
+	document.getElementById('status').innerHTML = "Best voted ideas below. Let's start the thread?";
+	//console.log(data);
+
+	for(var i=0; i<data.length; i++){
+	 	var topli = document.createElement("li");
+	 	topli.id = "top-"+i;
+	 	topli.className= "top-ideas";
+	 	topli.innerHTML = data[i].idea + ": " + data[i].score;
+	 	document.getElementById("top-list").appendChild(topli);		
+
+	 	if(i == 0){
+			currentThread = data[i].idea;
+		}	
+	}
+
+	var p = document.createElement('p');
+	p.innerHTML = "Thread will start in a bit..."
+	p.setAttribute('id', "start-thread");
+	document.getElementById('container').appendChild(p);
+
+	//it waits 5 seconds before it starts
+	window.setTimeout(sendImready, 5000);
 
 });
 
+var sendImready = function(){
+	socket.emit('imready');
+}
+
+socket.on('threadRunning', function(data){
+	myTurn = false;
+	imNext = false;
+
+	//remove previous UI
+	var topIdeas = document.getElementById('top-list');
+	if(topIdeas != null){
+		topIdeas.parentNode.removeChild(topIdeas);
+	}
+
+	var wait = document.getElementById('start-thread');
+	if(wait != null){
+		wait.parentNode.removeChild(wait);	
+	}
+
+    console.log(data);
+    console.log(myId);
+	//letting my know if it is my turn or if I'm next
+	for(var i=0; i<data.length; i++){
+		if(data[i].id == myId){
+			if(data[i].index == 0) myTurn = true;
+			else if(data[i].index == 1) imNext = true;
+			else{
+				myTurn = false;
+				myTurn = false;
+			}
+		}
+	}
+
+	//update status
+	document.getElementById('status').innerHTML = "Thread running";
+
+
+	//remove previous UI
+	var lastStatus = document.getElementById('status-turn');
+	if(lastStatus != null){
+	lastStatus.parentNode.removeChild(lastStatus);
+	}
+
+	if(myTurn){
+		itsMyTurn();
+	}
+	else if(imNext){
+		myTurnIsNext();
+	}
+	else{
+		itsNotMyTurn();
+	}
+
+});
+
+
+socket.on('lastThread', function(data){
+	console.log(data);
+
+});
+
+
+var myId;
+var myTurn = false;
+var imNext = false;
+var currentThread;
 var allUsers = new Array();
 var allIdeas = new Array();
 var joined = false;
@@ -279,6 +375,16 @@ var voteIdeas = function(){
 	//gather myVotes and send to server
  	var myVotes = new Array();
 
+	//remove previous UI
+	var voteBtn = document.getElementById('start-voting');
+	voteBtn.parentNode.removeChild(voteBtn);
+
+	var p = document.createElement('p');
+	p.innerHTML = "Waiting all users to vote."
+	p.setAttribute('id', "waiting2");
+	document.getElementById('container').appendChild(p);
+
+
 	for(var i=0; i<allIdeas.length; i++){	
 	var points = 0
 	 for(var j = 0; j < 5; j++){
@@ -294,6 +400,72 @@ var voteIdeas = function(){
 
 
 
+var itsMyTurn = function(){
 
+    var div = document.createElement('div');
+ 	div.setAttribute('id', "status-turn");
+  	document.getElementById('container').appendChild(div);
+ 
+	var p = document.createElement('p');
+	p.innerHTML = "It is your turn! You have to write ideas about: <br/>"+currentThread;
+	div.appendChild(p);
+
+	var f = document.createElement("form");
+	f.setAttribute('id',"threadForm");
+
+	var input = document.createElement("input");
+	input.setAttribute('type',"textarea");
+	input.setAttribute('maxlength',"500");
+	input.setAttribute('width',"500");
+	input.setAttribute('height',"200");
+	input.setAttribute('placeholder',"Write your idea here");
+	input.setAttribute('name',"threadText");
+	input.setAttribute('id',"threadText");
+	input.setAttribute('class',"threadText");
+	f.appendChild(input);
+
+
+ 	var message = "Write more pleeease"
+
+	var s = document.createElement("input"); 
+	s.setAttribute('type',"button");
+	s.setAttribute('id',"submitThreadText");
+	s.setAttribute('class',"btn");
+	s.setAttribute('onclick',"Imdone();");
+	s.setAttribute('value',message);
+	f.appendChild(s);	
+
+	div.appendChild(f);
+}
+
+var itsNotMyTurn = function(){
+    var div = document.createElement('div');
+ 	div.setAttribute('id', "status-turn");
+  	document.getElementById('container').appendChild(div);
+
+	var p = document.createElement('p');
+	p.innerHTML = "Sorry, it is not your time yet!<br/> Right now, you can go to the chat to talk about: <br/>" +currentThread;	
+	p.setAttribute('id', "status-turn");
+	div.appendChild(p);			
+}
+
+var myTurnIsNext = function(){	
+    var div = document.createElement('div');
+ 	div.setAttribute('id', "status-turn");
+  	document.getElementById('container').appendChild(div);
+
+  	var p = document.createElement('p');
+	p.innerHTML = "You're next! <br/> Soon, you'll receive the first ideas about: <br/>" +currentThread;
+	p.setAttribute('id', "status-turn");
+	div.appendChild(p);
+
+}
+
+
+var Imdone = function(){
+	var myText = document.getElementById('threadText').value;
+	socket.emit('nextTurn', myText);
+
+}
 
 window.addEventListener('load', init, false);

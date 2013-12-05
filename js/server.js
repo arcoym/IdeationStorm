@@ -18,12 +18,27 @@ function handler (req, res) {
 	});
 }
 
-
+//all clients connected to the website
 var clients = new Array();
+
+//the participants who joined with a user name.
+//a user object has a socket.id, a name and an index.
 var users = new Array();
+
+//list of icebreaker Ideas
 var initialIdeas = new Array();
+
+//the best 5 ideas
+var topIdeas = new Array();
+
+//current thread text
+var currentThreadText = "";
+
+//controling users state
 var submittedIdeas = 0;
 var submittedVotes = 0;
+var submittedReady = 0;
+
 var participants = 3;
 
 
@@ -33,6 +48,12 @@ function compare(a,b) {
 	  return 0;
 }
 
+function random(a,b){
+	var prob = Math.random();
+	if(prob >= 0.5) return 1;
+	else return -1;
+}
+
 
 io.sockets.on('connection', function (socket) {
 
@@ -40,8 +61,16 @@ io.sockets.on('connection', function (socket) {
 		clients[clients.length] = socket.id;
 		//console.log("We have "+ clients.length + " clients.");
 
-		socket.emit('getUsers', users);			
+		socket.emit('getUsers', users);	
+		socket.emit('myId', socket.id);		
 		
+		socket.on('join', function(data){
+			console.log("Client has joined with user name: "+ data);
+			users.push({id: socket.id, name: data, index: users.length});  
+			io.sockets.emit('getUsers', users);
+
+		});
+
 		socket.on('myIdeas', function(data){
 			for(var i = 0; i < data.length; i++){
 				initialIdeas.push({idea: data[i], points: 0});
@@ -54,7 +83,7 @@ io.sockets.on('connection', function (socket) {
 			else{
 				io.sockets.emit('getIdeas', initialIdeas);
 			}		
-			console.log(submittedIdeas);
+			//console.log(submittedIdeas);
 		});
 
 
@@ -75,32 +104,70 @@ io.sockets.on('connection', function (socket) {
 			if(submittedVotes > participants-1){
 				// calculates top words.
 				initialIdeas.sort(compare);
-				console.log(initialIdeas);
 
-				//io.sockets.emit('voteResults', data);
+				if(initialIdeas.length > 5){
+					for(var j = 0; j < 5; j++){
+						topIdeas.push({idea: initialIdeas[j].idea, score: initialIdeas[j].points });
+					}					
+				}
+				else{
+					for(var j = 0; j < initialIdeas.length; j++){
+						topIdeas.push({idea: initialIdeas[j].idea, score: initialIdeas[j].points });
+					}							
+				}
+				io.sockets.emit('voteResults', topIdeas);
 			}
-			else{
-				//socket.emit('waitVotes');				
+		});
+
+		socket.on('imready', function(){
+			submittedReady++;
+
+			//only sorts and sends when all participants are ready
+			if(submittedReady >= participants){				
+				users.sort(random);
+
+				console.log(users);
+
+				for(var j = 0; j < users.length; j++){
+					users[j].index = j;
+				}
+				io.sockets.emit('threadRunning', users);
+			}
+		});
+
+		socket.on('nextTurn', function(data){
+			currentThreadText = currentThreadText + data;
+			console.log(currentThreadText);
+
+			var allSockets = io.sockets.clients();
+
+
+			for(var j = 0; j < users.length; j++){
+				users[j].index = users[j].index-1;
+				
+				if(users[j].index < 0){
+				 	users[j].index = users.length-1;
+
+					for(var i = 0; i < allSockets.length; i++){
+						if(users[j].id == allSockets[i].id){
+							allSockets[i].emit("lastThread", currentThreadText);
+							console.log("thread sent");
+						}
+					}
+				}
 			}
 
+			console.log(users);
+			io.sockets.emit('threadRunning', users);
 
 
 		});
-
-
-		socket.on('join', function(data){
-			console.log("Client has joined with user name: "+ data);
-			users.push({id: socket.id, name: data, index: -1, turn: false });  
-			io.sockets.emit('getUsers', users);
-
-		});
-
 
 		socket.on('disconnect', function() {
 			console.log("Client has disconnected " + socket.id);
 			for(var i = 0; i < clients.length; i++){
 				if (socket.id == clients[i]){
-					users.splice(i,1);
+					//users.splice(i,1);
 					clients.splice(i,1);
 				}
 			}
