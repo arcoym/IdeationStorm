@@ -190,7 +190,6 @@ socket.on('threadRunning', function(data){
 		}
 	}
 
-
 	//update status
 	document.getElementById('status').innerHTML = "Thread running";
 
@@ -221,33 +220,32 @@ socket.on('receiveLiveCoding', function(data){
 socket.on('sendLiveCoding', function(){
 	if(myTurn){
 	//console.log("I still think it is my turn");
-	keepSending = window.setInterval(sendThreadText, 1000);
+	keepSending = window.setInterval(function(){
+	var threadText = document.getElementById('threadText').value;
+	socket.emit('liveCodingText', threadText);}, 1000);
 	}
 });
 
 
-
-var sendThreadText = function(){
-	//console.log("it is my turn and I will send my text");
-	var threadText = document.getElementById('threadText').value;
-	socket.emit('liveCodingText', threadText);
-
-}
-
 socket.on('previousText', function(data){
-	//console.log(data);
+	console.log(data);
 	previousText = data;
 	document.getElementById('previous').innerHTML = previousText;
 
 });
 
 socket.on('threadEnd', function(data){
+	myTurn = false;
+	imNext = false;
+	console.log(myTurn);
 	
 	//remove previous UI
 	var status = document.getElementById('status-turn');
 	if(status != null){
 		status.parentNode.removeChild(status);
 	}
+
+	document.getElementById('status').innerHTML = "Thread is over!"
 
 	finalText = data;
 
@@ -261,7 +259,18 @@ socket.on('threadEnd', function(data){
 	p.setAttribute('id', "status-turn");
 	div.appendChild(p);	
 
+	var f = document.createElement("form");
+	f.setAttribute('id',"want-more-form");
 
+		//insert button to start next thread
+	var b = document.createElement("input"); 
+	b.setAttribute('type',"button");
+	b.setAttribute('id',"want-more");
+	b.setAttribute('class',"btn");
+	b.setAttribute('onclick',"startAllOverAgain();");
+	b.setAttribute('value',"Go to Next Thread");
+	f.appendChild(b);	
+	div.appendChild(f);
 
 });
 
@@ -537,6 +546,8 @@ var myTurnIsNext = function(){
 
 
 var Imdone = function(){
+	myTurn = false;
+	console.log("acabeeeeeei");
 	var myText = document.getElementById('threadText').value;
 	socket.emit('nextTurn', myText);
 

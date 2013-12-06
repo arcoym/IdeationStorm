@@ -205,7 +205,6 @@ io.sockets.on('connection', function (socket) {
 			else{
 				io.sockets.emit('threadRunning', users);
 				//send the next user the text
-
 				socketTurn.emit("previousText", currentTurnText);						
 				socketTurn.emit('sendLiveCoding');
 				console.log(submittedThread);					
