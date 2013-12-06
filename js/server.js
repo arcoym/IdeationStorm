@@ -32,12 +32,14 @@ var initialIdeas = new Array();
 var topIdeas = new Array();
 
 //current thread text
-var currentThreadText = "";
+var entireThreadText = "";
+var currentTurnText = "";
 
 //controling users state
 var submittedIdeas = 0;
 var submittedVotes = 0;
 var submittedReady = 0;
+var submittedThread = 0;
 
 var socketTurn;
 var socketNext;
@@ -110,7 +112,7 @@ io.sockets.on('connection', function (socket) {
 
 
 			submittedVotes++;
-			if(submittedVotes > participants-1){
+			if(submittedVotes >= participants){
 				// calculates top words.
 				initialIdeas.sort(compare);
 
@@ -167,12 +169,9 @@ io.sockets.on('connection', function (socket) {
 		socket.on('nextTurn', function(data){
 			var allSockets = io.sockets.clients();
 
-			currentThreadText = currentThreadText + data;
-			//console.log(currentThreadText);
+			currentTurnText = data;
 
-			//send the next user the text
-			socketNext.emit("lastThread", currentThreadText);						
-
+			entireThreadText = entireThreadText + data;
 
 			for(var j = 0; j < users.length; j++){
 				users[j].index = users[j].index-1;
@@ -196,8 +195,22 @@ io.sockets.on('connection', function (socket) {
 				}
 			}
 
-			io.sockets.emit('threadRunning', users);
-			socketTurn.emit('sendLiveCoding');
+			submittedThread++;
+
+			if(submittedThread >= participants){	
+				io.sockets.emit('threadEnd', entireThreadText);
+				console.log("Thread Ended");					
+	
+			}
+			else{
+				io.sockets.emit('threadRunning', users);
+				//send the next user the text
+
+				socketTurn.emit("previousText", currentTurnText);						
+				socketTurn.emit('sendLiveCoding');
+				console.log(submittedThread);					
+					
+			}			
 
 		});
 

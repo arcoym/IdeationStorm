@@ -174,8 +174,8 @@ socket.on('threadRunning', function(data){
 	}
 
 
-    console.log(data);
-    console.log(myId);
+    //console.log(data);
+    //console.log(myId);
 
 	//letting me know if it is my turn or if I'm next
 	for(var i=0; i<data.length; i++){
@@ -185,12 +185,11 @@ socket.on('threadRunning', function(data){
 			else{
 				myTurn = false;
 				imNext = false;
-
-
-				console.log("it is not my turn");
+				//console.log("it is not my turn");
 			}
 		}
 	}
+
 
 	//update status
 	document.getElementById('status').innerHTML = "Thread running";
@@ -220,12 +219,10 @@ socket.on('receiveLiveCoding', function(data){
 
 
 socket.on('sendLiveCoding', function(){
-
 	if(myTurn){
-	console.log("I still think it is my turn");
+	//console.log("I still think it is my turn");
 	keepSending = window.setInterval(sendThreadText, 1000);
 	}
-
 });
 
 
@@ -237,11 +234,36 @@ var sendThreadText = function(){
 
 }
 
-socket.on('lastThread', function(data){
-	console.log(data);
+socket.on('previousText', function(data){
+	//console.log(data);
+	previousText = data;
+	document.getElementById('previous').innerHTML = previousText;
 
 });
 
+socket.on('threadEnd', function(data){
+	
+	//remove previous UI
+	var status = document.getElementById('status-turn');
+	if(status != null){
+		status.parentNode.removeChild(status);
+	}
+
+	finalText = data;
+
+
+    var div = document.createElement('div');
+ 	div.setAttribute('id', "status-turn");
+  	document.getElementById('container').appendChild(div);
+
+	var p = document.createElement('p');
+	p.innerHTML = "Here is complete text: <br/>" +finalText;	
+	p.setAttribute('id', "status-turn");
+	div.appendChild(p);	
+
+
+
+});
 
 
 
@@ -249,6 +271,8 @@ var myId;
 var myTurn = false;
 var imNext = false;
 var currentThread = "";
+var previousText = "You're the first!";
+var finalText = "";
 var allUsers = new Array();
 var allIdeas = new Array();
 var joined = false;
@@ -443,10 +467,17 @@ var itsMyTurn = function(){
     var div = document.createElement('div');
  	div.setAttribute('id', "status-turn");
   	document.getElementById('container').appendChild(div);
- 
+
+
 	var p = document.createElement('p');
-	p.innerHTML = "It is your turn! You have to write ideas about: <br/>"+currentThread;
+	p.innerHTML = "It is your turn! Here is what the first user wrote about <br/>"+currentThread; 
 	div.appendChild(p);
+	
+
+	var q = document.createElement('p');
+	q.innerHTML = previousText;
+	q.setAttribute('id', "previous");
+	div.appendChild(q);
 
 	var f = document.createElement("form");
 	f.setAttribute('id',"threadForm");
@@ -493,12 +524,12 @@ var myTurnIsNext = function(){
   	document.getElementById('container').appendChild(div);
 
   	var p = document.createElement('p');
-	p.innerHTML = "You're next! <br/> Soon, you'll receive the first ideas about: <br/>" +currentThread;
+	p.innerHTML = "You're next! <br/> Below you can see what the current user is writing about: <br/>" +currentThread;
 	p.setAttribute('id', "status-turn");
 	div.appendChild(p);
 
 	var n = document.createElement('p');
-	n.innerHTML = "text enters here";
+	n.innerHTML = "";
 	n.setAttribute('id', "live-coding");
 	div.appendChild(n);
 
