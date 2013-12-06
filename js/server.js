@@ -57,11 +57,15 @@ function random(a,b){
 	else return -1;
 }
 
+function rearrange(a,b) {
+	  if (a.index < b.index) return -1;
+	  if (a.index > b.index) return 1;
+	  return 0;
+}
+
 
 io.sockets.on('connection', function (socket) {
 		
-		var allSockets = io.sockets.clients();
-
 		//console.log("We have a new client: " + socket.id);
 		clients[clients.length] = socket.id;
 		//console.log("We have "+ clients.length + " clients.");
@@ -125,52 +129,44 @@ io.sockets.on('connection', function (socket) {
 		});
 
 		socket.on('imready', function(){
+			var allSockets = io.sockets.clients();
+
 			submittedReady++;
 
 			//only sorts and sends when all participants are ready
 			if(submittedReady >= participants){				
 				users.sort(random);
+				users.sort(rearrange);
 
 				console.log(users);
 
 				for(var j = 0; j < users.length; j++){
 					users[j].index = j;
-
-					//assign turn socket
-					if(users[j].index == 0){
-						console.log("socketTurn defined:" +socketTurn);
-						for(var i = 0; i < allSockets.length; i++){
-							if(users[j].id == allSockets[i].id){
-								socketTurn = allSockets[i];
-								console.log("socketTurn defined:" +socketTurn);
-
-							}
-						}						
-					}
-					//assign next socket
-					else if(users[j].index == 1){
-						console.log("socketNext defined:"+ socketNext);
-						for(var i = 0; i < allSockets.length; i++){
-							if(users[j].id == allSockets[i].id){
-								socketNext = allSockets[i];
-								console.log("socketNext defined:"+ socketNext);
-							}
-						}	
-					}
-
 				}
 
+				for(var i = 0; i < allSockets.length; i++){
+					if(users[0].id == allSockets[i].id){
+						socketTurn = allSockets[i];
+						console.log("socketTurn defined:" +socketTurn.id);					
+					}
+					else if(users[1].id == allSockets[i].id){
+						socketNext = allSockets[i];
+					    console.log("socketNext defined:"+ socketNext.id);
+					}
+				}
 				io.sockets.emit('threadRunning', users);
 				socketTurn.emit('sendLiveCoding');
 			}
 		});
 
 		socket.on('liveCodingText', function(data){
-			socketNext.emit('receiveLiveCoding', data);
+		socketNext.emit('receiveLiveCoding', data);
 
 		});
 
 		socket.on('nextTurn', function(data){
+			var allSockets = io.sockets.clients();
+
 			currentThreadText = currentThreadText + data;
 			//console.log(currentThreadText);
 
@@ -180,29 +176,26 @@ io.sockets.on('connection', function (socket) {
 
 			for(var j = 0; j < users.length; j++){
 				users[j].index = users[j].index-1;
-				
-				if(users[j].index < 0){
-				 	users[j].index = users.length-1;
-				}
-				else if(users[j].index == 0){
-					for(var i = 0; i < allSockets.length; i++){
-						if(users[j].id == allSockets[i].id){
-							socketTurn = allSockets[i];
-						}
-					}						
-				}
-				//assign next socket
-				else if(users[j].index == 1){
-					for(var i = 0; i < allSockets.length; i++){
-						if(users[j].id == allSockets[i].id){
-							socketNext = allSockets[i];
-						}
-					}	
-				}
 
+				if(users[j].index < 0){
+					console.log("error not here");
+					users[j].index = users.length-1;
+				}
+			}
+			users.sort(rearrange);
+			console.log(users);
+
+			for(var i = 0; i < allSockets.length; i++){
+				if(users[0].id == allSockets[i].id){
+					socketTurn = allSockets[i];
+					console.log("socketTurn defined:" +socketTurn.id);					
+				}
+				else if(users[1].id == allSockets[i].id){
+					socketNext = allSockets[i];
+				    console.log("socketNext defined:"+ socketNext.id);
+				}
 			}
 
-			console.log(users);
 			io.sockets.emit('threadRunning', users);
 			socketTurn.emit('sendLiveCoding');
 

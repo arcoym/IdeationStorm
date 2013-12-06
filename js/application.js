@@ -185,6 +185,8 @@ socket.on('threadRunning', function(data){
 			else{
 				myTurn = false;
 				imNext = false;
+
+
 				console.log("it is not my turn");
 			}
 		}
@@ -202,6 +204,7 @@ socket.on('threadRunning', function(data){
 	}
 	else{
 		itsNotMyTurn();
+		window.clearInterval(keepSending);
 	}
 
 });
@@ -220,11 +223,9 @@ socket.on('sendLiveCoding', function(){
 
 	if(myTurn){
 	console.log("I still think it is my turn");
-	var keepSending = window.setInterval(sendThreadText, 1000);
+	keepSending = window.setInterval(sendThreadText, 1000);
 	}
-	else{
-	clearInterval(keepSending);	
-	}
+
 });
 
 
@@ -252,6 +253,7 @@ var allUsers = new Array();
 var allIdeas = new Array();
 var joined = false;
 var participants = 3;
+var keepSending;
 
 var init = function() {
 	console.log("init");
@@ -358,11 +360,13 @@ var displayIdeas = function(){
 	}
 
 	for(var i=0; i<allIdeas.length; i++){
+		if(allIdeas != null){
 		 	var ideali = document.createElement("li");
 		 	ideali.id = "idea-"+i;
 		 	ideali.className= "ideas";
 		 	ideali.innerHTML = allIdeas[i];
-		 	document.getElementById("ideas-list").appendChild(ideali);			
+		 	document.getElementById("ideas-list").appendChild(ideali);
+		 }			
 	}
 }
 
