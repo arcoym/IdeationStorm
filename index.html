@@ -14,15 +14,16 @@
 
 	</head>
 	<body>
-		<h1>Brainstorm NOW</h1>
-		<h3 id="status">Welcome to Storm Session about "New methods for meeting people in conferences"</h3>
-		<div id="container"></div>
-		<form id="join">
-			<input name="username" id="username" type="text" maxlength="15" placeholder="UserName" />
-			<input type="button" value="Join Storm" class="btn" id="joinbtn"  onclick="joinStorm();" />
-		</form>	
+		<header><img class="logo" src="/img/logo.png" /></header>
+		<p id="status">Welcome to Storm Session about "New methods for meeting people in conferences".</p>
+		<div id="container">
+			<form id="join">
+				<input name="username" id="username" type="text" maxlength="15" placeholder="What's your name?" class="inputText"/>
+				<input type="button" value="Join Storm" class="btn" id="joinbtn"  onclick="joinStorm();" />
+			</form>	
+			<ul id="user-list">
+			</ul>
+		</div>
 
-		<ul id="user-list">
-		</ul>
 	</body>	
 </html>		

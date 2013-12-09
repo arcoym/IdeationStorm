@@ -45,7 +45,7 @@ socket.on('getUsers', function(data){
 			 	var userli = document.createElement("li");
 			 	userli.id = "firstUser";
 			 	userli.className= "firstUser";
-			 	userli.innerHTML = "You are the first user to join";
+			 	userli.innerHTML = "You are the first user to join.";
 			 	document.getElementById("user-list").appendChild(userli);			
 		}
 		//add the new list to HTML		
@@ -92,7 +92,7 @@ socket.on('startVoting', function(data){
  
 
 	var p = document.createElement('p');
-	p.innerHTML = "Vote in your ideas!"
+	//p.innerHTML = "Vote in your ideas!"
 	p.setAttribute('id', "start-voting");
 	document.getElementById('container').appendChild(p);
 
@@ -130,7 +130,7 @@ socket.on('voteResults', function(data){
 	 	var topli = document.createElement("li");
 	 	topli.id = "top-"+i;
 	 	topli.className= "top-ideas";
-	 	topli.innerHTML = data[i].idea + ": " + data[i].score;
+	 	topli.innerHTML = data[i].idea + ": " + data[i].score +" votes";
 	 	document.getElementById("top-list").appendChild(topli);		
 
 	 	if(i == 0){
@@ -311,7 +311,9 @@ var joinStorm = function(){
 
 var startSession = function(){
 	//change status
-	document.getElementById('status').innerHTML = "Let's get started! Ice breaker explanation";
+	document.getElementById('status').innerHTML = "Let's get started!";
+
+
 
 	//remove previous UI
 	var joinForm = document.getElementById('join');
@@ -322,6 +324,12 @@ var startSession = function(){
 	//add ice breaker form
 	var f = document.createElement("form");
 	f.setAttribute('id',"ideas-form");
+
+	var p = document.createElement("p");
+	p.innerHTML = "Ice breaker explanation";
+	p.setAttribute('id', "paragraph");
+
+
 	for(var i = 1; i < 6; i++){
 	var input = document.createElement("input");
 		input.setAttribute('type',"text");
@@ -330,6 +338,7 @@ var startSession = function(){
 		input.setAttribute('name',"idea"+i);
 		input.setAttribute('id',"idea"+i);
 		input.setAttribute('class',"idea_field");
+		input.setAttribute('class',"inputText");
 		f.appendChild(input);
 	}
 
@@ -342,8 +351,8 @@ var startSession = function(){
 	s.setAttribute('value',"Add Ideas");
 	f.appendChild(s);	
 
+	document.getElementById('container').appendChild(p);
 	document.getElementById('container').appendChild(f);
-
 };
 
 
@@ -360,11 +369,14 @@ var startIdeas = function(){
 	socket.emit('myIdeas',myIdeas);
 
 	//change status
-	document.getElementById('status').innerHTML = "Display all ideas";
+	document.getElementById('status').innerHTML = "Here is a summary of ideas!";
 
 	//remove previous UI
 	var ideasForm = document.getElementById('ideas-form');
 	ideasForm.parentNode.removeChild(ideasForm);	
+
+	var paragraph = document.getElementById('paragraph');
+	paragraph.parentNode.removeChild(paragraph);	
 
 	var ul = document.createElement("ul");
 	ul.setAttribute('id', "ideas-list");
@@ -410,6 +422,8 @@ var displayIdeasToVote = function(){
 	var wait = document.getElementById('waiting1');
 	wait.parentNode.removeChild(wait);	
 
+
+	document.getElementById('status').innerHTML = "Vote in your ideas!";
 
 	//remove last list
 	var lastIdeaList = document.getElementsByClassName("ideas");
