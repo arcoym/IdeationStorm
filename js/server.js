@@ -46,7 +46,6 @@ var socketNext;
 
 var participants = 3;
 
-
 function compare(a,b) {
 	  if (a.points < b.points) return 1;
 	  if (a.points > b.points) return -1;
@@ -79,8 +78,8 @@ io.sockets.on('connection', function (socket) {
 			console.log("Client has joined with user name: "+ data);
 			users.push({id: socket.id, name: data, index: users.length});  
 			io.sockets.emit('getUsers', users);
-
 		});
+
 
 		socket.on('myIdeas', function(data){
 			for(var i = 0; i < data.length; i++){

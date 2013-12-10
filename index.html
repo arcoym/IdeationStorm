@@ -15,6 +15,44 @@
 	</head>
 	<body>
 		<header><img class="logo" src="/img/logo.png" /></header>
+		<p id="status">Welcome to Storm Session about "New methods for meeting people at conferences".</p>
+		<div id="container">
+			<form id="join">
+				<input name="username" id="username" type="text" maxlength="15" placeholder="What's your name?" class="inputText"/>
+				<input type="button" value="Join Storm" class="btn" id="joinbtn"  onclick="joinStorm();" />
+			</form>	
+			<ul id="user-list">
+			</ul>
+		</div>
+		<!--
+		<div id="chat">
+            <div id="box">
+            <canvas width="800" height="600" id="mycanvas" />
+            </div>
+        </div>
+        <div id="navigation">
+            <input type="button" value="message" onclick="sendmessage();">
+            <input type="text" id="message" name="message">
+        </div> -->
+
+	</body>	
+</html>		<html>
+	<head>
+		<title>Brainstorm NOW</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="">
+		<meta name="author" content="Alexandra Coym/ Maria Paula Saba">
+
+		<link href="/css/style.css" rel="stylesheet"/> 
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/js/application.js"></script>		
+
+	</head>
+	<body>
+		<header><img class="logo" src="/img/logo.png" /></header>
 		<p id="status">Welcome to Storm Session about "New methods for meeting people in conferences".</p>
 		<div id="container">
 			<form id="join">

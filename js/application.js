@@ -1,5 +1,4 @@
-var socket = io.connect('http://localhost:8080/');
-
+var socket = io.connect('http://ec2-54-200-31-246.us-west-2.compute.amazonaws.com:8080/');
 socket.on('connect', function() {
 	console.log('connected');
 });
@@ -56,12 +55,12 @@ socket.on('getUsers', function(data){
 				 	userli.id = data[i].name;
 				 	userli.className= "user";
 				 	userli.innerHTML = data[i].name+" joined the Storm.";
-				 	document.getElementById("user-list").appendChild(userli);			
+				 	document.getElementById("user-list").appendChild(userli);
+        };			
 				}
 			}
 		}
-    }
-});
+    });
 
 
 socket.on('getIdeas', function(data){
@@ -280,7 +279,7 @@ var myId;
 var myTurn = false;
 var imNext = false;
 var currentThread = "";
-var previousText = "You're the first!";
+var previousText = "You're the first! Above you will see one randomly picked idea from the highest ranked ideas from the ice breaker. Use this idea or phrase to kick of a trail of thought. Even if this wasn't something you proposed, just go with it! Your fellow co-stormees will join you in a bit and help you flesh it out. We're not in a rush, so take your time. Once you're down, just hit the submit button and the next person will have a go at it.";
 var finalText = "";
 var allUsers = new Array();
 var allIdeas = new Array();
@@ -326,7 +325,8 @@ var startSession = function(){
 	f.setAttribute('id',"ideas-form");
 
 	var p = document.createElement("p");
-	p.innerHTML = "Ice breaker explanation";
+	p.innerHTML = "Alright, here we go. To start off this storm session, take a couple of minutes and think about words, phrases or ideas you associate with the topic of the brainstorming. The goal of this excercise is to make the threads later on even more productive, so go ahead and add any ideas that might have been discussed previously around the topic or will help narrow the threads down in one direction. Add up to 5 ideas below and hit add ideas when you're done.";
+	p.style.width = "700px";
 	p.setAttribute('id', "paragraph");
 
 
@@ -423,7 +423,11 @@ var displayIdeasToVote = function(){
 	wait.parentNode.removeChild(wait);	
 
 
-	document.getElementById('status').innerHTML = "Vote in your ideas!";
+	document.getElementById('status').innerHTML = "Vote on your ideas!";
+
+	var v = document.createElement("v");
+	v.innerHTML = "Below you will see a collection of all the ideas and phrases that you and your co-stormees have come up with in the ice breaker. Rate each idea on how strong, relevant and/or interesting it is. As with everything here at BrainstormNow!, the group decides. Go for it!";
+
 
 	//remove last list
 	var lastIdeaList = document.getElementsByClassName("ideas");
@@ -453,6 +457,7 @@ var displayIdeasToVote = function(){
 	 	}
 		ideali.appendChild(f);
 	}
+		document.getElementById('container').appendChild(v);
 }
 
 
