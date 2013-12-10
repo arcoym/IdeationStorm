@@ -1,0 +1,116 @@
+<html>
+    <head>
+
+        <style type="text/css">
+    #box {
+        float: right;
+        position: relative;
+        width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #chat {
+        position: absolute;
+        display: block;
+        height: 500px;
+        width: 300px;
+        overflow:scroll;
+        font-family:"Arial", Helvetica, sans-serif;
+        font-size: 0.75em;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        padding: 20px;
+        border: 1px solid black;
+    }
+
+    #navigation {
+    float: right;
+    position: relative;
+    bottom: 40px;
+    right: 40px;
+
+    }
+
+    input {
+        border: 5px solid white;
+        -webkit-box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1), 0 0 16px rgba(0, 0, 0, 0.1);
+        -moz-box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1), 0 0 16px rgba(0, 0, 0, 0.1);
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1), 0 0 16px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.5);
+        padding: 20px;
+        margin-left:auto;
+        margin-right:auto;
+        font-size: 0.75em;
+    }
+    </style>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var socket = io.connect('http://ec2-54-200-31-246.us-west-2.compute.amazonaws.com:8000/');
+            
+            socket.on('connect', function() {
+                console.log("Connected");
+                socket.emit('join', prompt('What is your name?'));
+
+            });
+
+            socket.on('announcement', function(data) {
+            console.log(data + ' joined the chat');
+            document.getElementById('chat').innerHTML += '<br/><div id="username_'+data+'"><b>' + data + '</b>' + ' joined the chat' + '</div>';
+        });
+
+            // Receive a message
+            socket.on('message', function(data) {
+                console.log("Got: " + data);
+                document.getElementById('chat').innerHTML += data.nickname + ': '  + data.message;
+            });
+
+            // Receive from any event
+            socket.on('news', function (data) {
+                console.log(data);
+            });
+            
+            var sendmessage = function() {
+                var message = document.getElementById('message').value;
+                console.log("Sending: " + message);
+                
+                // Send a messaage
+                socket.send(message);
+            };
+            
+            var sendother = function() {
+                var othermessage = document.getElementById('message').value;
+                console.log("sending: " + othermessage);
+                
+                // Send any kind of data with a custom event
+                socket.emit('otherevent',{ othermessage: othermessage });
+                socket.emit('otherevent', othermessage);
+            };
+
+        function draw() {
+
+            var canvas = document.getElementById('mycanvas');
+            var context = canvas.getContext('2d');
+
+            context.fillStyle = "rgb(200,0,0)";
+            context.fillRect (10, 10, 55, 50);
+
+        }
+
+        </script>
+    </head>
+    <body>
+        <div id="chat">
+            <div id="box">
+            <canvas width="800" height="600" id="mycanvas" />
+            </div>
+        </div>
+        <div id="navigation">
+            <input type="button" value="message" onclick="sendmessage();">
+            <input type="text" id="message" name="message">
+        </div>
+    </body>
+</html>
